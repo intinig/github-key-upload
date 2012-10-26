@@ -3,11 +3,16 @@
 require 'github-key-upload'
 require 'slop'
 
-opts = Slop.parse(:arguments => true, :longest_flag => 8) do
+opts = Slop.parse(:longest_flag => 8, :help => true) do
   banner "github-key-upload [options]\n"
-  on :k, :key, "Path to the file containing the public key to upload"
-  on :u, :user, "Github username"
-  on :P, :password, "Github password"
+  on :k, :key=, "Path to the file containing the public key to upload"
+  on :t, :title=, "Key Title"
+  on :u, :user=, "Github username"
+  on :P, :password=, "Github password"
 end
 
-Github::Key::Upload.upload(opts[:k], opts[:u], opts[:P])
+if (opts[:k].nil? || opts[:u].nil? || opts[:P].nil? || opts[:t].nil?)
+  puts opts.help
+else
+  Github::Key::Upload.upload(opts.to_hash)
+end
