@@ -1,3 +1,13 @@
 #!/usr/bin/env ruby
 
 require 'github-key-upload'
+require 'slop'
+
+opts = Slop.parse(:arguments => true, :longest_flag => 8) do
+  banner "github-key-upload [options]\n"
+  on :k, :key, "Path to the file containing the public key to upload"
+  on :u, :user, "Github username"
+  on :P, :password, "Github password"
+end
+
+Github::Key::Upload.upload(opts[:k], opts[:u], opts[:P])
