@@ -3,16 +3,56 @@
 require 'github-key-upload'
 require 'slop'
 
-opts = Slop.parse(:longest_flag => 8, :help => true) do
+def handle_exit_status(key)
+  if key
+    puts "OK"
+  else
+    puts "NOK"
+    exit(1)
+  end
+end
+
+opts = Slop.parse(:longest_flag => 1, :help => true) do
   banner "github-key-upload [options]\n"
   on :k, :key=, "Path to the file containing the public key to upload"
   on :t, :title=, "Key Title"
   on :u, :user=, "Github username"
   on :P, :password=, "Github password"
+  on :l, "--check-title", "Checks if the supplied key exists (by title)"
+  on :c, "--check-key", "Checks if the supplied key exists (by key)"
+  on :C, "--check-both", "Checks if the supplied key exists (exact combination of key and title)"
 end
 
-if (opts[:k].nil? || opts[:u].nil? || opts[:P].nil? || opts[:t].nil?)
+exit if opts[:help]
+
+if opts[:k].nil? && (opts[:c] || opts[:C] || opts[:l].nil?)
+  puts "You need to specify a path to a key (-k or --key)"
+  need_to_break = true
+end
+
+if opts[:t].nil? && (opts[:l] || opts[:C] || opts[:c].nil?)
+  puts "You need to specify a key title (-t or --title)"
+  need_to_break = true
+end
+
+if opts[:u].nil? || opts[:P].nil?
+  puts "You need to specify both username and password (-u or --user and -P or --password)"
+  need_to_break = true
+end
+
+if need_to_break
   puts opts.help
+  exit
+end
+
+if opts[:l].nil? && opts[:c].nil? && opts[:C].nil?
+  Github::Key::Upload.upload opts.to_hash
+elsif opts[:C] || (opts[:l] && opts[:c])
+  handle_exit_status(Github::Key::Upload.check_for_both opts.to_hash)
+elsif opts[:l]
+  handle_exit_status(Github::Key::Upload.check_for_title opts.to_hash)
+elsif opts[:c]
+  handle_exit_status(Github::Key::Upload.check_for_key opts.to_hash)
 else
-  Github::Key::Upload.upload(opts.to_hash)
+  puts opts.help
 end
