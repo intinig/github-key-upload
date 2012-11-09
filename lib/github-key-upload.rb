@@ -5,14 +5,14 @@ module Github
   module Key
     module Upload
       def self.create_auth(options)
-        github = Github.new basic_auth: "#{options[:user]}:#{options[:password]}"
+        github = Github.new :basic_auth => "#{options[:user]}:#{options[:password]}"
         github.oauth.create 'scopes' => ['user']
         github
       end
 
       def self.upload(options)
         github = create_auth(options)
-        github.users.keys.create({title: options[:title], key: File.read(options[:key])})
+        github.users.keys.create({:title => options[:title], :key => File.read(options[:key])})
       end
 
       def self.check_for_both(options)
