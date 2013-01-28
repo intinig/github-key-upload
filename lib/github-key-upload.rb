@@ -4,8 +4,19 @@ require "github_api"
 module Github
   module Key
     module Upload
+      DEFAULT_PEM_FILE = "/opt/chef/embedded/lib/ruby/1.9.1/rubygems/ssl_certs/ca-bundle.pem"
+
       def self.create_auth(options)
-        github = Github.new :basic_auth => "#{options[:user]}:#{options[:password]}"
+        opts = if RUBY_VERSION > "1.9"
+          { :ssl => { :ca_file => DEFAULT_PEM_FILE, :ca_path => File.dirname(DEFAULT_PEM_FILE) } }
+        else
+          nil
+        end
+
+        github = Github.new do |config|
+          config.basic_auth = "#{options[:user]}:#{options[:password]}"
+          config.connection_options = opts
+        end
         github.oauth.create 'scopes' => ['user']
         github
       end

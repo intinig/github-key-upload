@@ -18,6 +18,7 @@ opts = Slop.parse(:longest_flag => 1, :help => true) do
   on :t, :title=, "Key Title"
   on :u, :user=, "Github username"
   on :P, :password=, "Github password"
+  on :a, "ca_cert", "Certification Authority path, pem file", :argument => :optional
   on :l, "--check-title", "Checks if the supplied key exists (by title)"
   on :c, "--check-key", "Checks if the supplied key exists (by key)"
   on :C, "--check-both", "Checks if the supplied key exists (exact combination of key and title)"
@@ -35,7 +36,14 @@ if opts[:t].nil? && (opts[:l] || opts[:C] || opts[:c].nil?)
   need_to_break = true
 end
 
-if opts[:u].nil? || opts[:P].nil?
+if opts[:a].nil? && RUBY_VERSION > "1.9"
+  unless File.exists? Github::Key::Upload::DEFAULT_PEM_FILE
+    puts "You need to specify certification authority file with full path (pem file)"
+    need_to_break = true
+  end
+end
+
+unless opts[:u] && opts[:P]
   puts "You need to specify both username and password (-u or --user and -P or --password)"
   need_to_break = true
 end
