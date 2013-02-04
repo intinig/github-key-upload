@@ -5,7 +5,10 @@ module Github
   module Key
     module Upload
       def self.create_auth(options)
-        github = Github.new :basic_auth => "#{options[:user]}:#{options[:password]}"
+        github = Github.new do |config|
+          config.basic_auth = "#{options[:user]}:#{options[:password]}"
+          config.ssl = { :verify => false } unless options[:v]
+        end
         github.oauth.create 'scopes' => ['user']
         github
       end
